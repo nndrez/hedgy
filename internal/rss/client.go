@@ -8,8 +8,9 @@ import (
 )
 
 type Entry struct {
-	Title string
-	Link  string
+	Title           string
+	Link            string
+	PublishedParsed *time.Time
 }
 
 func Fetch(url string) ([]Entry, error) {
@@ -25,8 +26,9 @@ func Fetch(url string) ([]Entry, error) {
 	var entries []Entry
 	for _, item := range feed.Items {
 		entries = append(entries, Entry{
-			Title: item.Title,
-			Link:  item.Link,
+			Title:           item.Title,
+			Link:            item.Link,
+			PublishedParsed: item.PublishedParsed,
 		})
 	}
 

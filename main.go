@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	repo, err := storage.NewJSONStorage()
+	repo, err := storage.NewSQLiteStorage()
 	if err != nil {
 		log.Fatalf("Error during storage initialization: %v", err)
 	}
@@ -28,21 +28,25 @@ func main() {
 
 	myApp := app.NewApp(repo)
 
-	fmt.Println("Download articles...")
-	entries, err := myApp.FetchAll()
+	fmt.Println("Download articles and saving to database...")
+	err = myApp.FetchAll()
 	if err != nil {
 		log.Fatalf("Error during articles fetch: %v", err)
 	}
 
-	fmt.Printf("\n Upload %d articles.\n\n", len(entries))
+	fmt.Println("Fetch complete")
 
-	fmt.Println("First 10 articles:")
+	unreadArticles, err := repo.GetUnreadArticles(1, 10)
+	if err != nil {
+		log.Fatalf("Error reading unread articles: %v", err)
+	}
+
+	fmt.Printf("\n Found %d not read for Hacker News.\n\n", len(unreadArticles))
 	fmt.Println("--------------------------------------------------")
 
-	limit := min(10, len(entries))
-
-	for i := 0; i < limit; i++ {
-		fmt.Printf("%d. %s\n", i+1, entries[i].Title)
-		fmt.Printf("    %s\n\n", entries[i].Link)
+	for i, article := range unreadArticles {
+		fmt.Printf("%d. %s\n", i+1, article.Title)
+		fmt.Printf("    %s\n", article.Link)
+		fmt.Printf("    Is read: %v | Date: %s\n\n", article.IsRead, article.PublishedAt.Format("2006-01-02 15:04"))
 	}
 }

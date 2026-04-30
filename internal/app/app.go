@@ -3,10 +3,13 @@ package app
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/nndrez/hedgy/internal/rss"
 	"github.com/nndrez/hedgy/internal/storage"
 )
+
+const MaxArticlesPerDiscovery = 20
 
 type App struct {
 	repo storage.Repository
@@ -16,38 +19,58 @@ func NewApp(repo storage.Repository) *App {
 	return &App{repo: repo}
 }
 
-func (a *App) FetchAll() ([]rss.Entry, error) {
+func (a *App) FetchAll() error {
 	feeds, err := a.repo.GetFeeds()
 	if err != nil {
-		return nil, fmt.Errorf("error fetching feeds: %w", err)
+		return fmt.Errorf("error fetching feeds: %w", err)
 	}
 
 	var wg sync.WaitGroup
-	resultsChan := make(chan []rss.Entry, len(feeds))
+	errChan := make(chan error, len(feeds))
 
 	for _, f := range feeds {
 		wg.Add(1)
 
-		go func(url string) {
+		go func(feed storage.Feed) {
 			defer wg.Done()
-			entries, err := rss.Fetch(url)
+			entries, err := rss.Fetch(feed.URL)
 			if err != nil {
+				errChan <- fmt.Errorf("error downloading %s: %w", feed.Name, err)
 				return
 			}
 
-			resultsChan <- entries
-		}(f.URL)
+			var articles []storage.Article
+			for _, entry := range entries {
+				pubDate := time.Now()
+				if entry.PublishedParsed != nil {
+					pubDate = *entry.PublishedParsed
+				}
+
+				articles = append(articles, storage.Article{
+					FeedID:      feed.ID,
+					Title:       entry.Title,
+					Link:        entry.Link,
+					PublishedAt: pubDate,
+					IsRead:      false,
+				})
+			}
+
+			err = a.repo.SaveArticles(feed.ID, articles)
+			if err != nil {
+				errChan <- fmt.Errorf("error saving articles fot %s: %w", feed.Name, err)
+				return
+			}
+		}(f)
 	}
 
-	go func() {
-		wg.Wait()
-		close(resultsChan)
-	}()
+	wg.Wait()
+	close(errChan)
 
-	var allEntries []rss.Entry
-	for entries := range resultsChan {
-		allEntries = append(allEntries, entries...)
+	for err := range errChan {
+		if err != nil {
+			return err
+		}
 	}
 
-	return allEntries, nil
+	return nil
 }
