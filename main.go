@@ -6,6 +6,7 @@ import (
 
 	"github.com/nndrez/hedgy/internal/app"
 	"github.com/nndrez/hedgy/internal/storage"
+	"github.com/nndrez/hedgy/internal/tui"
 )
 
 func main() {
@@ -25,12 +26,10 @@ func main() {
 	}
 
 	myApp := app.NewApp(repo)
+	_ = myApp.FetchAll()
 
-	fmt.Println("Download articles and saving to database...")
-	err = myApp.FetchAll()
-	if err != nil {
-		log.Fatalf("Error during articles fetch: %v", err)
+	myTUI := tui.NewTUI(myApp, repo)
+	if err := myTUI.Start(); err != nil {
+		log.Fatalf("Fatal error in TUI: %v", err)
 	}
-
-	fmt.Println("Fetch complete")
 }

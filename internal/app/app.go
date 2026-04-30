@@ -9,8 +9,6 @@ import (
 	"github.com/nndrez/hedgy/internal/storage"
 )
 
-const MaxArticlesPerDiscovery = 20
-
 type App struct {
 	repo storage.Repository
 }

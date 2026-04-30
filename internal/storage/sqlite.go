@@ -39,7 +39,7 @@ func NewSQLiteStorage() (*SQLiteStorage, error) {
 		name 	TEXT NOT NULL,
 		url 	TEXT UNIQUE NOT NULL
 	);
-	
+
 	CREATE TABLE IF NOT EXISTS articles (
 		id 				INTEGER PRIMARY KEY AUTOINCREMENT,
 		feed_id 		INTEGER,
@@ -112,8 +112,8 @@ func (s *SQLiteStorage) SaveArticles(feedID int, articles []Article) error {
 	}
 
 	stmt, err := tx.Prepare(`
-		INSERT INTO articles (feed_id, title, link, description, content, published_at, is_read) 
-		VALUES (?, ?, ?, ?, ?, ?, 0) 
+		INSERT INTO articles (feed_id, title, link, description, content, published_at, is_read)
+		VALUES (?, ?, ?, ?, ?, ?, 0)
 		ON CONFLICT(link) DO NOTHING
 	`)
 	if err != nil {
@@ -137,10 +137,10 @@ func (s *SQLiteStorage) SaveArticles(feedID int, articles []Article) error {
 
 func (s *SQLiteStorage) GetUnreadArticles(feedID, limit int) ([]Article, error) {
 	rows, err := s.db.Query(`
-		SELECT id, feed_id, title, link, description, content, published_at, is_read 
-		FROM articles 
-		WHERE feed_id = ? AND is_read = 0 
-		ORDER BY published_at DESC 
+		SELECT id, feed_id, title, link, description, published_at, is_read
+		FROM articles
+		WHERE feed_id = ? AND is_read = 0
+		ORDER BY published_at DESC
 		LIMIT ?`, feedID, limit)
 
 	if err != nil {
@@ -151,10 +151,9 @@ func (s *SQLiteStorage) GetUnreadArticles(feedID, limit int) ([]Article, error) 
 	var articles []Article
 	for rows.Next() {
 		var a Article
-		if err := rows.Scan(&a.ID, &a.FeedID, &a.Title, &a.Link, &a.Description, &a.Content, &a.PublishedAt, &a.IsRead); err != nil {
+		if err := rows.Scan(&a.ID, &a.FeedID, &a.Title, &a.Link, &a.Description, &a.PublishedAt, &a.IsRead); err != nil {
 			return nil, fmt.Errorf("error during article scan: %w", err)
 		}
-
 		articles = append(articles, a)
 	}
 
