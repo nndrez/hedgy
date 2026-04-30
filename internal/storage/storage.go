@@ -15,6 +15,8 @@ type Article struct {
 	FeedID      int       `json:"feedId"`
 	Title       string    `json:"title"`
 	Link        string    `json:"link"`
+	Description string    `json:"description"`
+	Content     string    `json:"content"`
 	PublishedAt time.Time `json:"publishedAt"`
 	IsRead      bool      `json:"isRead"`
 }

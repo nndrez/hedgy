@@ -50,6 +50,8 @@ func (a *App) FetchAll() error {
 					FeedID:      feed.ID,
 					Title:       entry.Title,
 					Link:        entry.Link,
+					Description: entry.Description,
+					Content:     entry.Content,
 					PublishedAt: pubDate,
 					IsRead:      false,
 				})

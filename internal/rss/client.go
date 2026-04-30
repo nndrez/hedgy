@@ -10,6 +10,8 @@ import (
 type Entry struct {
 	Title           string
 	Link            string
+	Description     string
+	Content         string
 	PublishedParsed *time.Time
 }
 
@@ -28,6 +30,8 @@ func Fetch(url string) ([]Entry, error) {
 		entries = append(entries, Entry{
 			Title:           item.Title,
 			Link:            item.Link,
+			Description:     item.Description,
+			Content:         item.Content,
 			PublishedParsed: item.PublishedParsed,
 		})
 	}

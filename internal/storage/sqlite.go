@@ -45,6 +45,8 @@ func NewSQLiteStorage() (*SQLiteStorage, error) {
 		feed_id 		INTEGER,
 		title 			TEXT NOT NULL,
 		link 			TEXT UNIQUE NOT NULL,
+		description 	TEXT,
+		content 		TEXT,
 		published_at 	DATETIME,
 		is_read 		BOOLEAN DEFAULT 0,
 		FOREIGN KEY(feed_id) REFERENCES feeds(id)
@@ -110,8 +112,8 @@ func (s *SQLiteStorage) SaveArticles(feedID int, articles []Article) error {
 	}
 
 	stmt, err := tx.Prepare(`
-		INSERT INTO articles (feed_id, title, link, published_at, is_read) 
-		VALUES (?, ?, ?, ?, 0) 
+		INSERT INTO articles (feed_id, title, link, description, content, published_at, is_read) 
+		VALUES (?, ?, ?, ?, ?, ?, 0) 
 		ON CONFLICT(link) DO NOTHING
 	`)
 	if err != nil {
@@ -120,7 +122,7 @@ func (s *SQLiteStorage) SaveArticles(feedID int, articles []Article) error {
 	defer stmt.Close()
 
 	for _, a := range articles {
-		_, err := stmt.Exec(feedID, a.Title, a.Link, a.PublishedAt)
+		_, err := stmt.Exec(feedID, a.Title, a.Link, a.Description, a.Content, a.PublishedAt)
 		if err != nil {
 			return fmt.Errorf("error saving article: %w", err)
 		}
@@ -135,7 +137,7 @@ func (s *SQLiteStorage) SaveArticles(feedID int, articles []Article) error {
 
 func (s *SQLiteStorage) GetUnreadArticles(feedID, limit int) ([]Article, error) {
 	rows, err := s.db.Query(`
-		SELECT id, feed_id, title, link, published_at, is_read 
+		SELECT id, feed_id, title, link, description, content, published_at, is_read 
 		FROM articles 
 		WHERE feed_id = ? AND is_read = 0 
 		ORDER BY published_at DESC 
@@ -149,7 +151,7 @@ func (s *SQLiteStorage) GetUnreadArticles(feedID, limit int) ([]Article, error) 
 	var articles []Article
 	for rows.Next() {
 		var a Article
-		if err := rows.Scan(&a.ID, &a.FeedID, &a.Title, &a.Link, &a.PublishedAt, &a.IsRead); err != nil {
+		if err := rows.Scan(&a.ID, &a.FeedID, &a.Title, &a.Link, &a.Description, &a.Content, &a.PublishedAt, &a.IsRead); err != nil {
 			return nil, fmt.Errorf("error during article scan: %w", err)
 		}
 
