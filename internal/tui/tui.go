@@ -12,22 +12,34 @@ import (
 
 type TUI struct {
 	App     *tview.Application
+	Pages   *tview.Pages
 	Backend *app.App
 	Repo    storage.Repository
 
 	FeedList    *tview.List
 	ArticleList *tview.List
 	ContentView *tview.TextView
+	HelpBar     *tview.TextView
 }
 
 func NewTUI(backend *app.App, repo storage.Repository) *TUI {
+	tview.Styles.PrimitiveBackgroundColor = tcell.ColorDefault
+	tview.Styles.ContrastBackgroundColor = tcell.ColorDarkSlateGray
+	tview.Styles.PrimaryTextColor = tcell.ColorWhite
+	tview.Styles.SecondaryTextColor = tcell.ColorLightSkyBlue
+	tview.Styles.BorderColor = tcell.ColorDimGray
+	tview.Styles.TitleColor = tcell.ColorOrange
+	tview.Styles.GraphicsColor = tcell.ColorDimGray
+
 	t := &TUI{
 		App:         tview.NewApplication(),
+		Pages:       tview.NewPages(),
 		Backend:     backend,
 		Repo:        repo,
 		FeedList:    tview.NewList().ShowSecondaryText(false),
 		ArticleList: tview.NewList().ShowSecondaryText(false),
 		ContentView: tview.NewTextView().SetDynamicColors(true).SetWordWrap(true),
+		HelpBar:     tview.NewTextView().SetDynamicColors(true),
 	}
 
 	t.setupUI()
@@ -39,13 +51,27 @@ func (t *TUI) setupUI() {
 	t.ArticleList.SetTitle("Articles").SetBorder(true)
 	t.ContentView.SetTitle("Content").SetBorder(true)
 
+	t.FeedList.
+		SetSelectedBackgroundColor(tcell.ColorDarkCyan).
+		SetSelectedTextColor(tcell.ColorWhite).
+		SetMainTextColor(tcell.ColorLightGray)
+
+	t.ArticleList.
+		SetSelectedBackgroundColor(tcell.ColorDarkMagenta).
+		SetSelectedTextColor(tcell.ColorWhite).
+		SetMainTextColor(tcell.ColorLightGray)
+
 	leftColumn := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(t.FeedList, 0, 1, true).
 		AddItem(t.ArticleList, 0, 1, false)
 
-	mainLayout := tview.NewFlex().SetDirection(tview.FlexColumn).
+	centerSection := tview.NewFlex().SetDirection(tview.FlexColumn).
 		AddItem(leftColumn, 35, 0, true).
 		AddItem(t.ContentView, 0, 1, false)
+
+	mainLayout := tview.NewFlex().SetDirection(tview.FlexRow).
+		AddItem(centerSection, 0, 1, true).
+		AddItem(t.HelpBar, 1, 0, false)
 
 	t.App.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
@@ -60,7 +86,30 @@ func (t *TUI) setupUI() {
 		return event
 	})
 
-	t.App.SetRoot(mainLayout, true)
+	t.FeedList.SetFocusFunc(func() {
+		t.FeedList.SetBorderColor(tcell.ColorGreen)
+		t.ArticleList.SetBorderColor(tcell.ColorDefault)
+		t.ContentView.SetBorderColor(tcell.ColorDefault)
+		t.HelpBar.SetText(" [::b]Enter[::-]: Open Feed  |  [::b]Tab[::-]: Change Panel  |  [::b]Ctrl+C[::-]: Exit ")
+	})
+
+	t.ArticleList.SetFocusFunc(func() {
+		t.FeedList.SetBorderColor(tcell.ColorDefault)
+		t.ArticleList.SetBorderColor(tcell.ColorGreen)
+		t.ContentView.SetBorderColor(tcell.ColorDefault)
+		t.HelpBar.SetText(" [::b]Enter[::-]: Read Article  |  [::b]Tab[::-]: Change Panel  |  [::b]Ctrl+C[::-]: Exit ")
+	})
+
+	t.ContentView.SetFocusFunc(func() {
+		t.FeedList.SetBorderColor(tcell.ColorDefault)
+		t.ArticleList.SetBorderColor(tcell.ColorDefault)
+		t.ContentView.SetBorderColor(tcell.ColorGreen)
+		t.HelpBar.SetText(" [::b]Arrow Keys[::-]: Scroll Text  |  [::b]o[::-]: Open in Browser  |  [::b]Tab[::-]: Change ")
+	})
+
+	t.Pages.AddPage("main", mainLayout, true, true)
+
+	t.App.SetRoot(t.Pages, true)
 }
 
 func (t *TUI) cycleFocus() {
@@ -153,4 +202,47 @@ func coalesce(strings ...string) string {
 		}
 	}
 	return ""
+}
+
+func (t *TUI) showAddFeedPrompt() {
+	form := tview.NewForm().
+		AddInputField("Feed Name:", "", 40, nil, nil).
+		AddInputField("URL:", "", 40, nil, nil)
+
+	form.SetBorder(true).
+		SetTitle(" Add New Feed ").
+		SetTitleAlign(tview.AlignCenter)
+
+	form.AddButton("Save", func() {
+		feedName := form.GetFormItemByLabel("Feed Name").(*tview.InputField)
+		feedUrl := form.GetFormItemByLabel("URL").(*tview.InputField)
+
+		name := feedName.GetText()
+		url := feedUrl.GetText()
+
+		if name == "" || url == "" {
+			return
+		}
+
+		t.Repo.AddFeed(name, url)
+		t.loadFeeds()
+
+		t.Pages.RemovePage("add_feed_modal")
+	})
+
+	form.AddButton("Cancel" func() {
+		t.Pages.RemovePage("add_feed_modal")
+		t.App.SetFocus(t.FeedList)
+	})
+
+	modalLayout := tview.NewFlex().
+		AddItem(nil, 0, 1, false).
+		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+			AddItem(nil, 0, 1, false).
+			AddItem(form, 11, 1, true).
+			AddItem(nil, 0, 1, false),
+			50, 1, true).
+		AddItem(nil, 0, 1, false)
+
+	t.Pages.AddPage("add_feed_modal", modalLayout, true, true)
 }
