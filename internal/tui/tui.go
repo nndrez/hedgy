@@ -20,9 +20,18 @@ type TUI struct {
 	ArticleList *tview.List
 	ContentView *tview.TextView
 	HelpBar     *tview.TextView
+
+	ZenMode       bool
+	LeftColumn    *tview.Flex
+	CenterSection *tview.Flex
 }
 
 func NewTUI(backend *app.App, repo storage.Repository) *TUI {
+	tview.Borders.TopLeft = '╭'
+	tview.Borders.TopRight = '╮'
+	tview.Borders.BottomLeft = '╰'
+	tview.Borders.BottomRight = '╯'
+
 	tview.Styles.PrimitiveBackgroundColor = tcell.ColorDefault
 	tview.Styles.ContrastBackgroundColor = tcell.ColorDarkSlateGray
 	tview.Styles.PrimaryTextColor = tcell.ColorWhite
@@ -40,6 +49,7 @@ func NewTUI(backend *app.App, repo storage.Repository) *TUI {
 		ArticleList: tview.NewList().ShowSecondaryText(false),
 		ContentView: tview.NewTextView().SetDynamicColors(true).SetWordWrap(true),
 		HelpBar:     tview.NewTextView().SetDynamicColors(true),
+		ZenMode:     false,
 	}
 
 	t.setupUI()

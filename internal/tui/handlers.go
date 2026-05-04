@@ -13,7 +13,9 @@ func (t *TUI) setupHandlers() {
 
 		switch event.Key() {
 		case tcell.KeyTAB:
-			t.cycleFocus()
+			if !t.ZenMode {
+				t.cycleFocus()
+			}
 			return nil
 		case tcell.KeyCtrlC:
 			t.App.Stop()
@@ -21,6 +23,10 @@ func (t *TUI) setupHandlers() {
 		case tcell.KeyRune:
 			if event.Rune() == 'q' {
 				t.App.Stop()
+				return nil
+			}
+			if event.Rune() == 'f' {
+				t.toggleZenMode()
 				return nil
 			}
 		}
@@ -77,11 +83,16 @@ func (t *TUI) cycleFocus() {
 }
 
 func (t *TUI) updateHelpBar() {
+	if t.ZenMode {
+		t.HelpBar.SetText(" [::b]f[::-]: Exit from Zen | [::b]q[::-]: Exit ")
+		return
+	}
+
 	if t.FeedList.HasFocus() {
-		t.HelpBar.SetText(" [::b]Enter[::-]: Open | [::b]a[::-]: Add | [::b]Tab[::-]: Panel ")
+		t.HelpBar.SetText(" [::b]Enter[::-]: Open | [::b]a[::-]: Add | [::b]f[::-]: Zen | [::b]Tab[::-]: Panel ")
 	} else if t.ArticleList.HasFocus() {
-		t.HelpBar.SetText(" [::b]Enter[::-]: Read | [::b]Tab[::-]: Panel ")
+		t.HelpBar.SetText(" [::b]Enter[::-]: Read | [::b]f[::-]: Zen | [::b]Tab[::-]: Panel ")
 	} else {
-		t.HelpBar.SetText(" [::b]o[::-]: Browser | [::b]Tab[::-]: Panel ")
+		t.HelpBar.SetText(" [::b]o[::-]: Browser | [::b]f[::-]: Zen | [::b]Tab[::-]: Panel ")
 	}
 }
