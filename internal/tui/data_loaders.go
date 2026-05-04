@@ -51,6 +51,8 @@ func (t *TUI) loadArticles(feedID int) {
 }
 
 func (t *TUI) loadContent(article storage.Article) {
+	t.CurrentURL = article.Link
+
 	rawContent := coalesce(article.Content, article.Description, "[Empty feed, follow link to read]")
 
 	plainText, err := html2text.FromString(rawContent, html2text.Options{

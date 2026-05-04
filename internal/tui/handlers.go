@@ -1,6 +1,13 @@
 package tui
 
 import (
+	"fmt"
+	"os"
+	"os/exec"
+	"runtime"
+	"strings"
+	"time"
+
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -25,10 +32,6 @@ func (t *TUI) setupHandlers() {
 				t.App.Stop()
 				return nil
 			}
-			if event.Rune() == 'f' {
-				t.toggleZenMode()
-				return nil
-			}
 		}
 
 		return event
@@ -44,9 +47,37 @@ func (t *TUI) setupHandlers() {
 
 	t.ContentView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyEscape {
-			t.App.SetFocus(t.ArticleList)
+			if t.ZenMode {
+				t.toggleZenMode()
+			} else {
+				t.App.SetFocus(t.ArticleList)
+			}
 			return nil
 		}
+
+		switch event.Rune() {
+		case 'f':
+			t.toggleZenMode()
+			return nil
+		case 'o':
+			if t.CurrentURL == "" {
+				t.HelpBarLeft.SetText(" [red]Error: No URL found for this article[::-] ")
+			} else {
+				err := openBrowser(t.CurrentURL)
+				if err != nil {
+					t.HelpBarLeft.SetText(fmt.Sprintf(" [red]Error launching browser: %v[::-] ", err))
+				} else {
+					t.HelpBarLeft.SetText(fmt.Sprintf(" [green]Opening browser: %s[::-] ", t.CurrentURL))
+				}
+			}
+
+			go func() {
+				time.Sleep(4 * time.Second)
+				t.App.QueueUpdateDraw(func() { t.updateHelpBar() })
+			}()
+			return nil
+		}
+
 		return event
 	})
 
@@ -89,10 +120,43 @@ func (t *TUI) updateHelpBar() {
 	}
 
 	if t.FeedList.HasFocus() {
-		t.HelpBarLeft.SetText(" [::b]Enter[::-]: Open | [::b]a[::-]: Add | [::b]f[::-]: Zen | [::b]Tab[::-]: Panel ")
+		t.HelpBarLeft.SetText(" [::b]Enter[::-]: Open | [::b]a[::-]: Add | [::b]Tab[::-]: Panel ")
 	} else if t.ArticleList.HasFocus() {
-		t.HelpBarLeft.SetText(" [::b]Enter[::-]: Read | [::b]f[::-]: Zen | [::b]Tab[::-]: Panel ")
+		t.HelpBarLeft.SetText(" [::b]Enter[::-]: Read | [::b]Tab[::-]: Panel ")
 	} else {
 		t.HelpBarLeft.SetText(" [::b]o[::-]: Browser | [::b]f[::-]: Zen | [::b]Tab[::-]: Panel ")
 	}
+}
+
+func openBrowser(url string) error {
+	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
+		url = "https://" + url
+	}
+
+	isWSL := false
+	if b, err := os.ReadFile("/proc/version"); err == nil && strings.Contains(strings.ToLower(string(b)), "microsoft") {
+		isWSL = true
+	}
+
+	var cmd string
+	var args []string
+
+	if isWSL {
+		cmd = "powershell.exe"
+		args = []string{"-NoProfile", "-Command", fmt.Sprintf("Start-Process '%s'", url)}
+	} else {
+		switch runtime.GOOS {
+		case "windows":
+			cmd = "powershell"
+			args = []string{"-NoProfile", "-Command", fmt.Sprintf("Start-Process '%s'", url)}
+		case "darwin":
+			cmd = "open"
+			args = []string{url}
+		default:
+			cmd = "xdg-open"
+			args = []string{url}
+		}
+	}
+
+	return exec.Command(cmd, args...).Start()
 }

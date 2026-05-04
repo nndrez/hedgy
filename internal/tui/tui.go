@@ -30,6 +30,8 @@ type TUI struct {
 
 	IsFetching   bool
 	SpinnerFrame int
+
+	CurrentURL string
 }
 
 func NewTUI(backend *app.App, repo storage.Repository) *TUI {
