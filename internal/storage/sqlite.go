@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 var _ Repository = (*SQLiteStorage)(nil)
@@ -26,7 +26,7 @@ func NewSQLiteStorage() (*SQLiteStorage, error) {
 	dbPath := filepath.Join(appDir, "hedgy.db")
 
 	dsn := fmt.Sprintf("%s?_journal=WAL&_timeout=5000", dbPath)
-	db, err := sql.Open("sqlite3", dsn)
+	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("error opening db: %w", err)
 	}
