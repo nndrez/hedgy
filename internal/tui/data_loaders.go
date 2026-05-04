@@ -1,0 +1,85 @@
+package tui
+
+import (
+	"fmt"
+
+	"github.com/jaytaylor/html2text"
+	"github.com/nndrez/hedgy/internal/storage"
+)
+
+func (t *TUI) loadFeeds() {
+	t.FeedList.Clear()
+	feeds, err := t.Repo.GetFeeds()
+	if err != nil {
+		t.FeedList.AddItem("Loading feeds error", err.Error(), 'e', nil)
+		return
+	}
+
+	for _, f := range feeds {
+		feed := f
+		t.FeedList.AddItem(feed.Name, feed.URL, 0, func() {
+			t.loadArticles(feed.ID)
+		})
+	}
+}
+
+func (t *TUI) loadArticles(feedID int) {
+	t.ArticleList.Clear()
+	t.ContentView.Clear()
+
+	articles, err := t.Repo.GetUnreadArticles(feedID, 10)
+	if err != nil {
+		t.ArticleList.AddItem("Loading error", err.Error(), 'e', nil)
+		return
+	}
+
+	if len(articles) == 0 {
+		t.ContentView.SetText("No unread articles in this feed.")
+		return
+	}
+
+	for _, a := range articles {
+		article := a
+		t.ArticleList.AddItem(article.Title, article.PublishedAt.Format("02-01-2006 15:04"), 0, func() {
+			t.loadContent(article)
+			t.App.SetFocus(t.ContentView)
+		})
+	}
+
+	t.App.SetFocus(t.ArticleList)
+	t.loadContent(articles[0])
+}
+
+func (t *TUI) loadContent(article storage.Article) {
+	rawContent := coalesce(article.Content, article.Description, "[Empty feed, follow link to read]")
+
+	plainText, err := html2text.FromString(rawContent, html2text.Options{
+		PrettyTables: true,
+		OmitLinks:    false,
+	})
+
+	if err != nil {
+		plainText = rawContent
+	}
+
+	header := fmt.Sprintf("[::b]%s[::-]\n\n🔗 [blue]%s[-]\n📅 %s\n\n[gray]%s[-]\n\n",
+		article.Title,
+		article.Link,
+		article.PublishedAt.Format("02 Jan 2006 15:04"),
+		"--------------------------------------------------",
+	)
+
+	finalText := header + plainText
+
+	t.ContentView.SetText(finalText)
+	t.ContentView.ScrollToBeginning()
+}
+
+func coalesce(strings ...string) string {
+	for _, s := range strings {
+		if s != "" {
+			return s
+		}
+	}
+	return ""
+}

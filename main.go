@@ -26,9 +26,8 @@ func main() {
 	}
 
 	myApp := app.NewApp(repo)
-	_ = myApp.FetchAll()
-
 	myTUI := tui.NewTUI(myApp, repo)
+
 	if err := myTUI.Start(); err != nil {
 		log.Fatalf("Fatal error in TUI: %v", err)
 	}
