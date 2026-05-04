@@ -1,14 +1,18 @@
 package tui
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/gdamore/tcell/v2"
+	"github.com/nndrez/hedgy/internal/storage"
 	"github.com/rivo/tview"
 )
 
 func (t *TUI) showAddFeedPrompt() {
 	form := tview.NewForm().
-		AddInputField("Feed Name:", "", 0, nil, nil).
-		AddInputField("URL:", "", 0, nil, nil)
+		AddInputField("Feed Name", "", 0, nil, nil).
+		AddInputField("URL", "", 0, nil, nil)
 
 	form.SetBorder(true).
 		SetTitle(" Add New Feed ").
@@ -27,6 +31,39 @@ func (t *TUI) showAddFeedPrompt() {
 
 		t.Repo.AddFeed(name, url)
 		t.loadFeeds()
+
+		go func() {
+			t.IsFetching = true
+
+			feeds, _ := t.Repo.GetFeeds()
+			var newFeed storage.Feed
+			for _, f := range feeds {
+				if f.URL == url {
+					newFeed = f
+					break
+				}
+			}
+
+			if newFeed.ID != 0 {
+				err := t.Backend.FetchFeed(newFeed)
+
+				t.App.QueueUpdateDraw(func() {
+					t.IsFetching = false
+					if err != nil {
+						t.HelpBarLeft.SetText(fmt.Sprintf(" [red]Fetch error: %v[::-] ", err))
+					} else {
+						t.HelpBarLeft.SetText(fmt.Sprintf(" [green]Feed added: %s[::-] ", name))
+					}
+
+					go func() {
+						time.Sleep(4 * time.Second)
+						t.App.QueueUpdateDraw(func() { t.updateHelpBar() })
+					}()
+				})
+			} else {
+				t.App.QueueUpdateDraw(func() { t.IsFetching = false })
+			}
+		}()
 
 		t.Pages.RemovePage("add_feed_modal")
 		t.App.SetFocus(t.FeedList)

@@ -42,6 +42,18 @@ func (t *TUI) setupHandlers() {
 			t.showAddFeedPrompt()
 			return nil
 		}
+		if event.Rune() == 'r' {
+			t.refreshAllFeeds()
+			return nil
+		}
+		return event
+	})
+
+	t.ArticleList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Rune() == 'r' {
+			t.refreshCurrentFeed()
+			return nil
+		}
 		return event
 	})
 
@@ -120,9 +132,9 @@ func (t *TUI) updateHelpBar() {
 	}
 
 	if t.FeedList.HasFocus() {
-		t.HelpBarLeft.SetText(" [::b]Enter[::-]: Open | [::b]a[::-]: Add | [::b]Tab[::-]: Panel ")
+		t.HelpBarLeft.SetText(" [::b]Enter[::-]: Open | [::b]r[::-]: Refresh | [::b]a[::-]: Add | [::b]Tab[::-]: Panel ")
 	} else if t.ArticleList.HasFocus() {
-		t.HelpBarLeft.SetText(" [::b]Enter[::-]: Read | [::b]Tab[::-]: Panel ")
+		t.HelpBarLeft.SetText(" [::b]Enter[::-]: Read | [::b]r[::-]: Refresh | [::b]Tab[::-]: Panel ")
 	} else {
 		t.HelpBarLeft.SetText(" [::b]o[::-]: Browser | [::b]f[::-]: Zen | [::b]Tab[::-]: Panel ")
 	}

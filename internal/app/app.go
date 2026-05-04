@@ -25,12 +25,18 @@ func (a *App) FetchAll() error {
 
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(feeds))
+	sem := make(chan struct{}, 5)
 
 	for _, f := range feeds {
 		wg.Add(1)
 
 		go func(feed storage.Feed) {
 			defer wg.Done()
+
+			// semaphore
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
 			entries, err := rss.Fetch(feed.URL)
 			if err != nil {
 				errChan <- fmt.Errorf("error downloading %s: %w", feed.Name, err)
@@ -70,6 +76,38 @@ func (a *App) FetchAll() error {
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (a *App) FetchFeed(feed storage.Feed) error {
+	entries, err := rss.Fetch(feed.URL)
+	if err != nil {
+		return fmt.Errorf("error downloading %s: %w", feed.Name, err)
+	}
+
+	var articles []storage.Article
+	for _, entry := range entries {
+		pubDate := time.Now()
+		if entry.PublishedParsed != nil {
+			pubDate = *entry.PublishedParsed
+		}
+
+		articles = append(articles, storage.Article{
+			FeedID:      feed.ID,
+			Title:       entry.Title,
+			Link:        entry.Link,
+			Description: entry.Description,
+			Content:     entry.Content,
+			PublishedAt: pubDate,
+			IsRead:      false,
+		})
+	}
+
+	err = a.repo.SaveArticles(feed.ID, articles)
+	if err != nil {
+		return fmt.Errorf("error saving articles for %s: %w", feed.Name, err)
 	}
 
 	return nil

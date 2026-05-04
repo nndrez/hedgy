@@ -31,7 +31,8 @@ type TUI struct {
 	IsFetching   bool
 	SpinnerFrame int
 
-	CurrentURL string
+	CurrentURL    string
+	CurrentFeedID int
 }
 
 func NewTUI(backend *app.App, repo storage.Repository) *TUI {
@@ -71,24 +72,6 @@ func (t *TUI) Start() error {
 
 	go t.startBackgroundWorkers()
 
-	go func() {
-		t.IsFetching = true
-		err := t.Backend.FetchAll()
-
-		t.App.QueueUpdateDraw(func() {
-			t.IsFetching = false
-			t.loadFeeds()
-			if err != nil {
-				t.HelpBarLeft.SetText(fmt.Sprintf(" [red]Fetch error: %v[::-] ", err))
-				go func() {
-					time.Sleep(4 * time.Second)
-					t.App.QueueUpdateDraw(func() { t.updateHelpBar() })
-				}()
-			}
-
-		})
-	}()
-
 	return t.App.Run()
 }
 
@@ -109,4 +92,51 @@ func (t *TUI) startBackgroundWorkers() {
 			t.HelpBarRight.SetText(fmt.Sprintf("%s[white]%s ", status, currentTime))
 		})
 	}
+}
+
+func (t *TUI) refreshAllFeeds() {
+	if t.IsFetching {
+		return
+	}
+	go func() {
+		t.IsFetching = true
+		err := t.Backend.FetchAll()
+
+		t.App.QueueUpdateDraw(func() {
+			t.IsFetching = false
+			t.loadFeeds()
+			if err != nil {
+				t.HelpBarLeft.SetText(fmt.Sprintf(" [red]Fetch error: %v[::-] ", err))
+			}
+		})
+	}()
+}
+
+func (t *TUI) refreshCurrentFeed() {
+	if t.IsFetching || t.CurrentFeedID == 0 {
+		return
+	}
+
+	go func() {
+		t.IsFetching = true
+
+		feeds, _ := t.Repo.GetFeeds()
+		var currentFeed storage.Feed
+		for _, f := range feeds {
+			if f.ID == t.CurrentFeedID {
+				currentFeed = f
+				break
+			}
+		}
+
+		err := t.Backend.FetchFeed(currentFeed)
+
+		t.App.QueueUpdateDraw(func() {
+			t.IsFetching = false
+			t.loadArticles(t.CurrentFeedID)
+			if err != nil {
+				t.HelpBarLeft.SetText(fmt.Sprintf(" [red]Fetch error: %v[::-] ", err))
+			}
+		})
+	}()
 }

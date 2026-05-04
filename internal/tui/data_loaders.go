@@ -21,9 +21,15 @@ func (t *TUI) loadFeeds() {
 			t.loadArticles(feed.ID)
 		})
 	}
+
+	if len(feeds) > 0 {
+		t.loadArticles(feeds[0].ID)
+		t.App.SetFocus(t.FeedList)
+	}
 }
 
 func (t *TUI) loadArticles(feedID int) {
+	t.CurrentFeedID = feedID
 	t.ArticleList.Clear()
 	t.ContentView.Clear()
 
