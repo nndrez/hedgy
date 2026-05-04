@@ -84,15 +84,15 @@ func (t *TUI) cycleFocus() {
 
 func (t *TUI) updateHelpBar() {
 	if t.ZenMode {
-		t.HelpBar.SetText(" [::b]f[::-]: Exit from Zen | [::b]q[::-]: Exit ")
+		t.HelpBarLeft.SetText(" [::b]f[::-]: Exit from Zen | [::b]q[::-]: Exit ")
 		return
 	}
 
 	if t.FeedList.HasFocus() {
-		t.HelpBar.SetText(" [::b]Enter[::-]: Open | [::b]a[::-]: Add | [::b]f[::-]: Zen | [::b]Tab[::-]: Panel ")
+		t.HelpBarLeft.SetText(" [::b]Enter[::-]: Open | [::b]a[::-]: Add | [::b]f[::-]: Zen | [::b]Tab[::-]: Panel ")
 	} else if t.ArticleList.HasFocus() {
-		t.HelpBar.SetText(" [::b]Enter[::-]: Read | [::b]f[::-]: Zen | [::b]Tab[::-]: Panel ")
+		t.HelpBarLeft.SetText(" [::b]Enter[::-]: Read | [::b]f[::-]: Zen | [::b]Tab[::-]: Panel ")
 	} else {
-		t.HelpBar.SetText(" [::b]o[::-]: Browser | [::b]f[::-]: Zen | [::b]Tab[::-]: Panel ")
+		t.HelpBarLeft.SetText(" [::b]o[::-]: Browser | [::b]f[::-]: Zen | [::b]Tab[::-]: Panel ")
 	}
 }

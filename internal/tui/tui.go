@@ -19,11 +19,17 @@ type TUI struct {
 	FeedList    *tview.List
 	ArticleList *tview.List
 	ContentView *tview.TextView
-	HelpBar     *tview.TextView
+
+	HelpBarLeft      *tview.TextView
+	HelpBarRight     *tview.TextView
+	HelpBarContainer *tview.Flex
 
 	ZenMode       bool
 	LeftColumn    *tview.Flex
 	CenterSection *tview.Flex
+
+	IsFetching   bool
+	SpinnerFrame int
 }
 
 func NewTUI(backend *app.App, repo storage.Repository) *TUI {
@@ -48,8 +54,10 @@ func NewTUI(backend *app.App, repo storage.Repository) *TUI {
 		FeedList:    tview.NewList().ShowSecondaryText(false),
 		ArticleList: tview.NewList().ShowSecondaryText(false),
 		ContentView: tview.NewTextView().SetDynamicColors(true).SetWordWrap(true),
-		HelpBar:     tview.NewTextView().SetDynamicColors(true),
-		ZenMode:     false,
+
+		HelpBarLeft:  tview.NewTextView().SetDynamicColors(true),
+		HelpBarRight: tview.NewTextView().SetDynamicColors(true).SetTextAlign(tview.AlignRight),
+		ZenMode:      false,
 	}
 
 	t.setupUI()
@@ -59,26 +67,44 @@ func NewTUI(backend *app.App, repo storage.Repository) *TUI {
 func (t *TUI) Start() error {
 	t.loadFeeds()
 
-	go func() {
-		t.App.QueueUpdateDraw(func() {
-			t.HelpBar.SetText(" [yellow]Fetching feeds...[::-] ")
-		})
+	go t.startBackgroundWorkers()
 
+	go func() {
+		t.IsFetching = true
 		err := t.Backend.FetchAll()
 
 		t.App.QueueUpdateDraw(func() {
+			t.IsFetching = false
 			t.loadFeeds()
 			if err != nil {
-				t.HelpBar.SetText(fmt.Sprintf(" [red]Fetch error: %v[::-] ", err))
-			} else {
-				t.HelpBar.SetText(" [green]Feeds updated![::-] ")
+				t.HelpBarLeft.SetText(fmt.Sprintf(" [red]Fetch error: %v[::-] ", err))
 				go func() {
-					time.Sleep(3 * time.Second)
+					time.Sleep(4 * time.Second)
 					t.App.QueueUpdateDraw(func() { t.updateHelpBar() })
 				}()
 			}
+
 		})
 	}()
 
 	return t.App.Run()
+}
+
+func (t *TUI) startBackgroundWorkers() {
+	ticker := time.NewTicker(100 * time.Millisecond)
+	frames := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+
+	for range ticker.C {
+		t.App.QueueUpdateDraw(func() {
+			currentTime := time.Now().Format("15:04:05")
+			status := ""
+
+			if t.IsFetching {
+				t.SpinnerFrame = (t.SpinnerFrame + 1) % len(frames)
+				status = fmt.Sprintf("[yellow]%s Syncing...[::-] ", frames[t.SpinnerFrame])
+			}
+
+			t.HelpBarRight.SetText(fmt.Sprintf("%s[white]%s ", status, currentTime))
+		})
+	}
 }

@@ -28,9 +28,13 @@ func (t *TUI) setupUI() {
 		AddItem(t.LeftColumn, 35, 0, true).
 		AddItem(t.ContentView, 0, 1, false)
 
+	t.HelpBarContainer = tview.NewFlex().SetDirection(tview.FlexColumn).
+		AddItem(t.HelpBarLeft, 0, 1, false).
+		AddItem(t.HelpBarRight, 25, 0, false)
+
 	mainLayout := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(t.CenterSection, 0, 1, true).
-		AddItem(t.HelpBar, 1, 0, false)
+		AddItem(t.HelpBarContainer, 1, 0, false)
 
 	t.setupHandlers()
 
