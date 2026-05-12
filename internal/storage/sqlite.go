@@ -160,7 +160,7 @@ func (s *SQLiteStorage) GetUnreadArticles(feedID, limit int) ([]Article, error) 
 	return articles, nil
 }
 
-func (s *SQLiteStorage) MarkAsRead(articleID int) error {
-	_, err := s.db.Exec("UPDATE articles SET is_read = 1 WHERE id = ?", articleID)
+func (s *SQLiteStorage) ToggleReadStatus(articleID int) error {
+	_, err := s.db.Exec("UPDATE articles SET is_read = CASE WHEN is_read = 1 THEN 0 ELSE 1 END WHERE id = ?", articleID)
 	return err
 }

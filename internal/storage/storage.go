@@ -28,5 +28,5 @@ type Repository interface {
 
 	SaveArticles(feedID int, articles []Article) error
 	GetUnreadArticles(feedID int, limit int) ([]Article, error)
-	MarkAsRead(articleID int) error
+	ToggleReadStatus(articleID int) error
 }
