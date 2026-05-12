@@ -54,6 +54,21 @@ func (t *TUI) setupHandlers() {
 			t.refreshCurrentFeed()
 			return nil
 		}
+		if event.Rune() == 'm' {
+			index := t.ArticleList.GetCurrentItem()
+			if index >= 0 && index < len(t.CurrentArticles) {
+				article := t.CurrentArticles[index]
+
+				err := t.Repo.ToggleReadStatus(article.ID)
+				if err != nil {
+					t.HelpBarLeft.SetText(fmt.Sprintf(" [red]Update error: %v[::-] ", err))
+					return nil
+				}
+
+				t.loadArticles(t.CurrentFeedID)
+				t.ArticleList.SetCurrentItem(index)
+			}
+		}
 		return event
 	})
 
@@ -134,7 +149,7 @@ func (t *TUI) updateHelpBar() {
 	if t.FeedList.HasFocus() {
 		t.HelpBarLeft.SetText(" [::b]Enter[::-]: Open | [::b]r[::-]: Refresh | [::b]a[::-]: Add | [::b]Tab[::-]: Panel ")
 	} else if t.ArticleList.HasFocus() {
-		t.HelpBarLeft.SetText(" [::b]Enter[::-]: Read | [::b]r[::-]: Refresh | [::b]Tab[::-]: Panel ")
+		t.HelpBarLeft.SetText(" [::b]Enter[::-]: Read | [::b]m[::-]: Mark | [::b]r[::-]: Refresh | [::b]Tab[::-]: Panel ")
 	} else {
 		t.HelpBarLeft.SetText(" [::b]o[::-]: Browser | [::b]f[::-]: Zen | [::b]Tab[::-]: Panel ")
 	}

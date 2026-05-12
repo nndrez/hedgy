@@ -39,6 +39,8 @@ func (t *TUI) loadArticles(feedID int) {
 		return
 	}
 
+	t.CurrentArticles = articles
+
 	if len(articles) == 0 {
 		t.ContentView.SetText("No unread articles in this feed.")
 		return
@@ -46,7 +48,12 @@ func (t *TUI) loadArticles(feedID int) {
 
 	for _, a := range articles {
 		article := a
-		t.ArticleList.AddItem(article.Title, article.PublishedAt.Format("02-01-2006 15:04"), 0, func() {
+
+		displayTitle := article.Title
+		if !article.IsRead {
+			displayTitle = fmt.Sprintf("[::b]%s[::-]", article.Title)
+		}
+		t.ArticleList.AddItem(displayTitle, article.PublishedAt.Format("02-01-2006 15:04"), 0, func() {
 			t.loadContent(article)
 			t.App.SetFocus(t.ContentView)
 		})

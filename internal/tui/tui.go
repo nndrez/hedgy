@@ -31,8 +31,9 @@ type TUI struct {
 	IsFetching   bool
 	SpinnerFrame int
 
-	CurrentURL    string
-	CurrentFeedID int
+	CurrentURL      string
+	CurrentFeedID   int
+	CurrentArticles []storage.Article
 }
 
 func NewTUI(backend *app.App, repo storage.Repository) *TUI {
