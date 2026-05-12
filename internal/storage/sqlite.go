@@ -135,13 +135,19 @@ func (s *SQLiteStorage) SaveArticles(feedID int, articles []Article) error {
 	return nil
 }
 
-func (s *SQLiteStorage) GetUnreadArticles(feedID, limit int) ([]Article, error) {
-	rows, err := s.db.Query(`
-		SELECT id, feed_id, title, link, description, published_at, is_read
-		FROM articles
-		WHERE feed_id = ? AND is_read = 0
-		ORDER BY published_at DESC
-		LIMIT ?`, feedID, limit)
+func (s *SQLiteStorage) GetArticles(feedID, limit int, unreadOnly bool) ([]Article, error) {
+	query := `
+        SELECT id, feed_id, title, link, description, published_at, is_read
+        FROM articles
+        WHERE feed_id = ?`
+
+	if unreadOnly {
+		query += " AND is_read = 0"
+	}
+
+	query += " ORDER BY published_at DESC LIMIT ?"
+
+	rows, err := s.db.Query(query, feedID, limit)
 
 	if err != nil {
 		return nil, fmt.Errorf("error fetching unread articles: %w", err)

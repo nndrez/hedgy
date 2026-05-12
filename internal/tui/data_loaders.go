@@ -32,8 +32,9 @@ func (t *TUI) loadArticles(feedID int) {
 	t.CurrentFeedID = feedID
 	t.ArticleList.Clear()
 	t.ContentView.Clear()
+	t.updateArticleTabDisplay()
 
-	articles, err := t.Repo.GetUnreadArticles(feedID, 10)
+	articles, err := t.Repo.GetArticles(feedID, 10, t.ShowUnreadOnly)
 	if err != nil {
 		t.ArticleList.AddItem("Loading error", err.Error(), 'e', nil)
 		return

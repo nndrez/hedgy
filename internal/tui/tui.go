@@ -16,9 +16,11 @@ type TUI struct {
 	Backend *app.App
 	Repo    storage.Repository
 
-	FeedList    *tview.List
-	ArticleList *tview.List
-	ContentView *tview.TextView
+	FeedList       *tview.List
+	ArticleList    *tview.List
+	ArticleTabs    *tview.TextView
+	ShowUnreadOnly bool
+	ContentView    *tview.TextView
 
 	HelpBarLeft      *tview.TextView
 	HelpBarRight     *tview.TextView
@@ -51,13 +53,14 @@ func NewTUI(backend *app.App, repo storage.Repository) *TUI {
 	tview.Styles.GraphicsColor = tcell.ColorDimGray
 
 	t := &TUI{
-		App:         tview.NewApplication(),
-		Pages:       tview.NewPages(),
-		Backend:     backend,
-		Repo:        repo,
-		FeedList:    tview.NewList().ShowSecondaryText(false),
-		ArticleList: tview.NewList().ShowSecondaryText(false),
-		ContentView: tview.NewTextView().SetDynamicColors(true).SetWordWrap(true),
+		App:            tview.NewApplication(),
+		Pages:          tview.NewPages(),
+		Backend:        backend,
+		Repo:           repo,
+		FeedList:       tview.NewList().ShowSecondaryText(false),
+		ArticleList:    tview.NewList().ShowSecondaryText(false),
+		ShowUnreadOnly: true,
+		ContentView:    tview.NewTextView().SetDynamicColors(true).SetWordWrap(true),
 
 		HelpBarLeft:  tview.NewTextView().SetDynamicColors(true),
 		HelpBarRight: tview.NewTextView().SetDynamicColors(true).SetTextAlign(tview.AlignRight),

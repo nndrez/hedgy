@@ -27,6 +27,6 @@ type Repository interface {
 	DeleteFeed(id int) error
 
 	SaveArticles(feedID int, articles []Article) error
-	GetUnreadArticles(feedID int, limit int) ([]Article, error)
+	GetArticles(feedID int, limit int, unreadOnly bool) ([]Article, error)
 	ToggleReadStatus(articleID int) error
 }

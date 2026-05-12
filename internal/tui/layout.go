@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"fmt"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -20,9 +22,18 @@ func (t *TUI) setupUI() {
 		SetSelectedTextColor(tcell.ColorWhite).
 		SetMainTextColor(tcell.ColorLightGray)
 
+	t.ArticleTabs = tview.NewTextView().
+		SetDynamicColors(true).
+		SetTextAlign(tview.AlignCenter)
+
+	articleSection := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(t.ArticleTabs, 1, 0, false).
+		AddItem(t.ArticleList, 0, 1, true)
+
 	t.LeftColumn = tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(t.FeedList, 0, 1, true).
-		AddItem(t.ArticleList, 0, 1, false)
+		AddItem(articleSection, 0, 1, false)
 
 	t.CenterSection = tview.NewFlex().SetDirection(tview.FlexColumn).
 		AddItem(t.LeftColumn, 35, 0, true).
@@ -57,4 +68,18 @@ func (t *TUI) toggleZenMode() {
 	}
 
 	t.updateHelpBar()
+}
+
+func (t *TUI) updateArticleTabDisplay() {
+	var allTab, unreadTab string
+
+	if t.ShowUnreadOnly {
+		allTab = "[white][ All ][-]"
+		unreadTab = "[yellow::b][ Unread ][-]"
+	} else {
+		allTab = "[yellow::b][ All ][-]"
+		unreadTab = "[white][ Unread ][-]"
+	}
+
+	t.ArticleTabs.SetText(fmt.Sprintf("%s   %s", allTab, unreadTab))
 }
