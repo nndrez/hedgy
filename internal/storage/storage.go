@@ -24,9 +24,10 @@ type Article struct {
 type Repository interface {
 	GetFeeds() ([]Feed, error)
 	AddFeed(name, url string) error
+	UpdateFeed(id int, name, url string) error
 	DeleteFeed(id int) error
 
 	SaveArticles(feedID int, articles []Article) error
-	GetArticles(feedID int, limit int, unreadOnly bool) ([]Article, error)
+	GetArticles(feedID, limit int, unreadOnly bool) ([]Article, error)
 	ToggleReadStatus(articleID int) error
 }

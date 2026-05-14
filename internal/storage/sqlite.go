@@ -87,6 +87,13 @@ func (s *SQLiteStorage) AddFeed(name, url string) error {
 	return nil
 }
 
+func (s *SQLiteStorage) UpdateFeed(id int, name, url string) error {
+	if _, err := s.db.Exec("UPDATE feeds SET name = ?, url = ? WHERE id = ?", name, url, id); err != nil {
+		return fmt.Errorf("error update feed %d: %w", id, err)
+	}
+	return nil
+}
+
 func (s *SQLiteStorage) DeleteFeed(id int) error {
 	res, err := s.db.Exec("DELETE FROM feeds WHERE id = ?", id)
 	if err != nil {
