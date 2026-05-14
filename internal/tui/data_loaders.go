@@ -31,7 +31,6 @@ func (t *TUI) loadFeeds() {
 func (t *TUI) loadArticles(feedID int) {
 	t.CurrentFeedID = feedID
 	t.ArticleList.Clear()
-	t.ContentView.Clear()
 	t.updateArticleTabDisplay()
 
 	articles, err := t.Repo.GetArticles(feedID, 10, t.ShowUnreadOnly)
@@ -61,7 +60,6 @@ func (t *TUI) loadArticles(feedID int) {
 	}
 
 	t.App.SetFocus(t.ArticleList)
-	t.loadContent(articles[0])
 }
 
 func (t *TUI) loadContent(article storage.Article) {
@@ -78,7 +76,7 @@ func (t *TUI) loadContent(article storage.Article) {
 		plainText = rawContent
 	}
 
-	header := fmt.Sprintf("[::b]%s[::-]\n\n🔗 [blue]%s[-]\n📅 %s\n\n[gray]%s[-]\n\n",
+	header := fmt.Sprintf("[::b]%s[::-]\n\n[blue]%s[-]\n%s\n\n[gray]%s[-]\n\n",
 		article.Title,
 		article.Link,
 		article.PublishedAt.Format("02 Jan 2006 15:04"),
