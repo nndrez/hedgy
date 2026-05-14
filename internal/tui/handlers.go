@@ -12,6 +12,7 @@ import (
 )
 
 func (t *TUI) setupHandlers() {
+
 	t.App.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		frontPage, _ := t.Pages.GetFrontPage()
 		if frontPage == "add_feed_modal" {
@@ -22,6 +23,11 @@ func (t *TUI) setupHandlers() {
 		case tcell.KeyTAB:
 			if !t.ZenMode {
 				t.cycleFocus()
+			}
+			return nil
+		case tcell.KeyBacktab:
+			if !t.ZenMode {
+				t.reverseCycleFocus()
 			}
 			return nil
 		case tcell.KeyCtrlC:
@@ -135,6 +141,7 @@ func (t *TUI) setupHandlers() {
 	})
 }
 
+// feed -> article -> context
 func (t *TUI) cycleFocus() {
 	if t.FeedList.HasFocus() {
 		t.App.SetFocus(t.ArticleList)
@@ -142,6 +149,17 @@ func (t *TUI) cycleFocus() {
 		t.App.SetFocus(t.ContentView)
 	} else {
 		t.App.SetFocus(t.FeedList)
+	}
+}
+
+// feed -> context -> article
+func (t *TUI) reverseCycleFocus() {
+	if t.FeedList.HasFocus() {
+		t.App.SetFocus(t.ContentView)
+	} else if t.ArticleList.HasFocus() {
+		t.App.SetFocus(t.FeedList)
+	} else {
+		t.App.SetFocus(t.ArticleList)
 	}
 }
 
