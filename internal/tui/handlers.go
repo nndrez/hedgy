@@ -15,7 +15,7 @@ func (t *TUI) setupHandlers() {
 
 	t.App.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		frontPage, _ := t.Pages.GetFrontPage()
-		if frontPage == "add_feed_modal" {
+		if frontPage == AddFeedModal {
 			return event
 		}
 

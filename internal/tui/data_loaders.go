@@ -53,7 +53,7 @@ func (t *TUI) loadArticles(feedID int) {
 		if !article.IsRead {
 			displayTitle = fmt.Sprintf("[::b]%s[::-]", article.Title)
 		}
-		t.ArticleList.AddItem(displayTitle, article.PublishedAt.Format("02-01-2006 15:04"), 0, func() {
+		t.ArticleList.AddItem(displayTitle, article.PublishedAt.Format(DateFormat), 0, func() {
 			t.loadContent(article)
 			t.App.SetFocus(t.ContentView)
 		})
@@ -79,7 +79,7 @@ func (t *TUI) loadContent(article storage.Article) {
 	header := fmt.Sprintf("[::b]%s[::-]\n\n[blue]%s[-]\n%s\n\n[gray]%s[-]\n\n",
 		article.Title,
 		article.Link,
-		article.PublishedAt.Format("02 Jan 2006 15:04"),
+		article.PublishedAt.Format(DateFormat),
 		"--------------------------------------------------",
 	)
 

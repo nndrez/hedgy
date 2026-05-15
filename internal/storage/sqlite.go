@@ -11,6 +11,8 @@ import (
 
 var _ Repository = (*SQLiteStorage)(nil)
 
+const appName = "hedgy"
+
 type SQLiteStorage struct {
 	db *sql.DB
 }
@@ -21,9 +23,11 @@ func NewSQLiteStorage() (*SQLiteStorage, error) {
 		return nil, fmt.Errorf("impossible to obtain config dir: %w", err)
 	}
 
-	appDir := filepath.Join(configDir, "hedgy")
-	os.MkdirAll(appDir, 0755)
-	dbPath := filepath.Join(appDir, "hedgy.db")
+	appDir := filepath.Join(configDir, appName)
+	if err := os.MkdirAll(appDir, 0755); err != nil {
+		return nil, fmt.Errorf("cannot create app directory: %w", err)
+	}
+	dbPath := filepath.Join(appDir, appName+".db")
 
 	dsn := fmt.Sprintf("%s?_journal=WAL&_timeout=5000", dbPath)
 	db, err := sql.Open("sqlite", dsn)

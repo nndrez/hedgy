@@ -15,8 +15,10 @@ type Entry struct {
 	PublishedParsed *time.Time
 }
 
+const fetchTimeout = 10 * time.Second
+
 func Fetch(url string) ([]Entry, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), fetchTimeout)
 	defer cancel()
 
 	fp := gofeed.NewParser()

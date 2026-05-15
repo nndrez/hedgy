@@ -9,6 +9,8 @@ import (
 	"github.com/rivo/tview"
 )
 
+const AddFeedModal = "add_feed_modal"
+
 func (t *TUI) showAddFeedPrompt() {
 	form := tview.NewForm().
 		AddInputField("Feed Name", "", 0, nil, nil).
@@ -65,20 +67,20 @@ func (t *TUI) showAddFeedPrompt() {
 			}
 		}()
 
-		t.Pages.RemovePage("add_feed_modal")
+		t.Pages.RemovePage(AddFeedModal)
 		t.App.SetFocus(t.FeedList)
 		t.updateHelpBar()
 	})
 
 	form.AddButton("Cancel", func() {
-		t.Pages.RemovePage("add_feed_modal")
+		t.Pages.RemovePage(AddFeedModal)
 		t.App.SetFocus(t.FeedList)
 		t.updateHelpBar()
 	})
 
 	form.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyEscape {
-			t.Pages.RemovePage("add_feed_modal")
+			t.Pages.RemovePage(AddFeedModal)
 			t.App.SetFocus(t.FeedList)
 			t.updateHelpBar()
 			return nil
@@ -95,5 +97,5 @@ func (t *TUI) showAddFeedPrompt() {
 			0, 2, true).
 		AddItem(nil, 0, 1, false)
 
-	t.Pages.AddPage("add_feed_modal", modalLayout, true, true)
+	t.Pages.AddPage(AddFeedModal, modalLayout, true, true)
 }

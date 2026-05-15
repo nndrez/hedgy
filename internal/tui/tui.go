@@ -10,6 +10,9 @@ import (
 	"github.com/rivo/tview"
 )
 
+const DateFormat = "02 Jan 2006 15:04"
+const HourFormat = "15:04:05"
+
 type TUI struct {
 	App     *tview.Application
 	Pages   *tview.Pages
@@ -85,7 +88,7 @@ func (t *TUI) startBackgroundWorkers() {
 
 	for range ticker.C {
 		t.App.QueueUpdateDraw(func() {
-			currentTime := time.Now().Format("15:04:05")
+			currentTime := time.Now().Format(HourFormat)
 			status := ""
 
 			if t.IsFetching {
