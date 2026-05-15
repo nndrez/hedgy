@@ -31,13 +31,13 @@ func (t *TUI) showAddFeedPrompt() {
 			return
 		}
 
-		t.Repo.AddFeed(name, url)
+		t.Backend.AddFeed(name, url)
 		t.loadFeeds()
 
 		go func() {
 			t.IsFetching = true
 
-			feeds, _ := t.Repo.GetFeeds()
+			feeds, _ := t.Backend.GetFeeds()
 			var newFeed storage.Feed
 			for _, f := range feeds {
 				if f.URL == url {

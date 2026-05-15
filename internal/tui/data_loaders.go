@@ -9,7 +9,7 @@ import (
 
 func (t *TUI) loadFeeds() {
 	t.FeedList.Clear()
-	feeds, err := t.Repo.GetFeeds()
+	feeds, err := t.Backend.GetFeeds()
 	if err != nil {
 		t.FeedList.AddItem("Loading feeds error", err.Error(), 'e', nil)
 		return
@@ -33,7 +33,7 @@ func (t *TUI) loadArticles(feedID int) {
 	t.ArticleList.Clear()
 	t.updateArticleTabDisplay()
 
-	articles, err := t.Repo.GetArticles(feedID, 10, t.ShowUnreadOnly)
+	articles, err := t.Backend.GetArticles(feedID, 10, t.ShowUnreadOnly)
 	if err != nil {
 		t.ArticleList.AddItem("Loading error", err.Error(), 'e', nil)
 		return

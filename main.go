@@ -15,7 +15,7 @@ func main() {
 	}
 
 	myApp := app.NewApp(repo)
-	myTUI := tui.NewTUI(myApp, repo)
+	myTUI := tui.NewTUI(myApp)
 
 	if err := myTUI.Start(); err != nil {
 		log.Fatalf("Fatal error in TUI: %v", err)

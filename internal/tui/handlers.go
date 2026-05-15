@@ -65,7 +65,7 @@ func (t *TUI) setupHandlers() {
 			if index >= 0 && index < len(t.CurrentArticles) {
 				article := t.CurrentArticles[index]
 
-				err := t.Repo.ToggleReadStatus(article.ID)
+				err := t.Backend.ToggleReadStatus(article.ID)
 				if err != nil {
 					t.HelpBarLeft.SetText(fmt.Sprintf(" [red]Update error: %v[::-] ", err))
 					return nil
@@ -82,7 +82,7 @@ func (t *TUI) setupHandlers() {
 				article := t.CurrentArticles[index]
 
 				if !article.IsRead {
-					err := t.Repo.ToggleReadStatus(article.ID)
+					err := t.Backend.ToggleReadStatus(article.ID)
 					if err != nil {
 						t.HelpBarLeft.SetText(fmt.Sprintf(" [red]Update error: %v[::-] ", err))
 						return nil

@@ -17,7 +17,6 @@ type TUI struct {
 	App     *tview.Application
 	Pages   *tview.Pages
 	Backend *app.App
-	Repo    storage.Repository
 
 	FeedList       *tview.List
 	ArticleList    *tview.List
@@ -41,7 +40,7 @@ type TUI struct {
 	CurrentArticles []storage.Article
 }
 
-func NewTUI(backend *app.App, repo storage.Repository) *TUI {
+func NewTUI(backend *app.App) *TUI {
 	tview.Borders.TopLeft = '╭'
 	tview.Borders.TopRight = '╮'
 	tview.Borders.BottomLeft = '╰'
@@ -59,7 +58,6 @@ func NewTUI(backend *app.App, repo storage.Repository) *TUI {
 		App:            tview.NewApplication(),
 		Pages:          tview.NewPages(),
 		Backend:        backend,
-		Repo:           repo,
 		FeedList:       tview.NewList().ShowSecondaryText(false),
 		ArticleList:    tview.NewList().ShowSecondaryText(false),
 		ShowUnreadOnly: true,
@@ -127,7 +125,7 @@ func (t *TUI) refreshCurrentFeed() {
 	go func() {
 		t.IsFetching = true
 
-		feeds, _ := t.Repo.GetFeeds()
+		feeds, _ := t.Backend.GetFeeds()
 		var currentFeed storage.Feed
 		for _, f := range feeds {
 			if f.ID == t.CurrentFeedID {
